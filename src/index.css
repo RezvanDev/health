@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --tg-theme-bg-color: #fff;
+    --tg-theme-text-color: #000;
+    --tg-theme-hint-color: #999;
+    --tg-theme-link-color: #2481cc;
+    --tg-theme-button-color: #2481cc;
+    --tg-theme-button-text-color: #fff;
+    --tg-theme-secondary-bg-color: #f4f4f5;
+  }
+
+  body {
+    @apply bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)];
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .tg-button {
+    @apply w-full py-3 px-4 rounded-xl font-medium transition-all
+    bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)]
+    active:opacity-70;
+  }
+
+  .tg-card {
+    @apply bg-[var(--tg-theme-secondary-bg-color)] rounded-xl p-4;
+  }
+
+  .tg-link {
+    @apply text-[var(--tg-theme-link-color)] hover:opacity-80;
+  }
+
+  .tg-hint {
+    @apply text-[var(--tg-theme-hint-color)];
+  }
+}
