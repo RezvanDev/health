@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'https://77b8-202-79-184-241.ngrok-free.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://602e-202-79-184-241.ngrok-free.app/api';
 
 // Общие типы
 type Period = 'daily' | 'weekly' | 'monthly';
