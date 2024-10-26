@@ -1,55 +1,165 @@
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'https://77b8-202-79-184-241.ngrok-free.app/api';
 
-const API_URL = 'https://de3a-202-79-184-241.ngrok-free.app/api';
+// Общие типы
+type Period = 'daily' | 'weekly' | 'monthly';
+type Priority = 'low' | 'medium' | 'high';
+type Category = 'finance' | 'relationships' | 'mindfulness' | 'entertainment' | 'meaning';
 
-export interface Event {
-  id: number;
+// Системные задачи (рекомендации)
+export interface SystemTask {
+  id: string;
   title: string;
   description: string;
-  shortDescription: string;
-  date: string;
-  rating: number;
-  imageUrl: string;
-  isMeetBookingChoice: boolean;
-  category: string;
-  city: string;
-  price: number;
-  format: string;
-  address?: string;
+  category: Category;
+  xp: number;
+  period: Period;
+  completed: boolean;
+  completedAt?: string;
 }
 
+// Пользовательские задачи
+export interface UserTask {
+  id: string;
+  title: string;
+  description: string;
+  category: Category;
+  priority: Priority;
+  completed: boolean;
+  deadline?: string;
+  xp: number;
+  createdAt: string;
+}
+
+// Остальные интерфейсы
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  progress: number;
+  maxProgress: number;
+  unlocked: boolean;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  xp: number;
+  category: string;
+}
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  level: number;
+  xp: number;
+  currentStreak: number;
+  longestStreak: number;
+}
+
+// API клиент
 export const api = {
-  async getEvents(category?: string, city?: string): Promise<Event[]> {
-    try {
-      const params = new URLSearchParams();
-      if (category) params.append('category', category);
-      if (city) params.append('city', city);
-      const response = await axios.get(`${API_URL}/events`, {
-        params,
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
+  // Системные задачи (рекомендации на дашборде)
+  systemTasks: {
+    getAll: async (period: Period): Promise<SystemTask[]> => {
+      const response = await axios.get(`${API_URL}/system-tasks`, {
+        params: { period }
       });
-      console.log('Response data:', response.data); // Добавлено для отладки
       return response.data;
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      throw error;
+    },
+
+    complete: async (taskId: string): Promise<SystemTask> => {
+      const response = await axios.post(`${API_URL}/system-tasks/${taskId}/complete`);
+      return response.data;
     }
   },
 
-  async getEvent(id: number): Promise<Event> {
-    try {
-      const response = await axios.get(`${API_URL}/events/${id}`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      });
-      console.log('Response data for single event:', response.data); // Добавлено для отладки
+  // Пользовательские задачи
+  userTasks: {
+    getAll: async (): Promise<UserTask[]> => {
+      const response = await axios.get(`${API_URL}/user-tasks`);
       return response.data;
-    } catch (error) {
-      console.error(`Error fetching event with id ${id}:`, error);
-      throw error;
+    },
+
+    create: async (taskData: Omit<UserTask, 'id' | 'completed' | 'createdAt'>): Promise<UserTask> => {
+      const response = await axios.post(`${API_URL}/user-tasks`, taskData);
+      return response.data;
+    },
+
+    complete: async (taskId: string): Promise<UserTask> => {
+      const response = await axios.post(`${API_URL}/user-tasks/${taskId}/complete`);
+      return response.data;
+    },
+
+    delete: async (taskId: string): Promise<void> => {
+      await axios.delete(`${API_URL}/user-tasks/${taskId}`);
+    }
+  },
+
+  // Достижения остаются без изменений
+  achievements: {
+    getAll: async (): Promise<Achievement[]> => {
+      const response = await axios.get(`${API_URL}/achievements`);
+      return response.data;
+    },
+
+    getProgress: async (): Promise<{
+      daily: { completed: number; total: number; trend: string };
+      weekly: { completed: number; total: number; trend: string };
+      monthly: { completed: number; total: number; trend: string };
+    }> => {
+      const response = await axios.get(`${API_URL}/achievements/progress`);
+      return response.data;
+    }
+  },
+
+  // Статистика
+  stats: {
+    getDaily: async () => {
+      const response = await axios.get(`${API_URL}/stats/daily`);
+      return response.data;
+    },
+
+    getWeekly: async () => {
+      const response = await axios.get(`${API_URL}/stats/weekly`);
+      return response.data;
+    },
+
+    getMonthly: async () => {
+      const response = await axios.get(`${API_URL}/stats/monthly`);
+      return response.data;
+    },
+
+    getCategories: async () => {
+      const response = await axios.get(`${API_URL}/stats/categories`);
+      return response.data;
+    }
+  },
+
+  // Профиль
+  profile: {
+    get: async (): Promise<UserProfile> => {
+      const response = await axios.get(`${API_URL}/profile`);
+      return response.data;
+    },
+
+    update: async (data: Partial<UserProfile>): Promise<UserProfile> => {
+      const response = await axios.put(`${API_URL}/profile`, data);
+      return response.data;
+    },
+
+    getProgress: async () => {
+      const response = await axios.get(`${API_URL}/profile/progress`);
+      return response.data;
     }
   }
 };
+
+// Настройка перехватчика для Telegram
+axios.interceptors.request.use((config) => {
+  if (window.Telegram?.WebApp) {
+    const webAppData = window.Telegram.WebApp.initData;
+    config.headers['x-telegram-auth-data'] = webAppData;
+  }
+  return config;
+});
+
+export default api;
