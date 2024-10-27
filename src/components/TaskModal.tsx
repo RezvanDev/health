@@ -56,7 +56,6 @@ export function TaskModal({ isOpen, onClose, onTaskCreate }: TaskModalProps) {
       onClose();
     } catch (err) {
       console.error('Error creating task:', err);
-      // Можно добавить уведомление об ошибке
     } finally {
       setLoading(false);
     }
@@ -249,3 +248,5 @@ export function TaskModal({ isOpen, onClose, onTaskCreate }: TaskModalProps) {
     </div>
   );
 }
+
+export default TaskModal;

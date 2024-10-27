@@ -10,10 +10,12 @@ export function TaskList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Загружаем задачи при загрузке компонента
   useEffect(() => {
     loadTasks();
   }, []);
 
+  // Функция для загрузки задач
   const loadTasks = async () => {
     try {
       setLoading(true);
@@ -28,6 +30,7 @@ export function TaskList() {
     }
   };
 
+  // Завершение задачи
   const handleTaskComplete = async (taskId: string) => {
     try {
       const updatedTask = await completeUserTask(taskId);
@@ -36,29 +39,28 @@ export function TaskList() {
           task.id === taskId ? { ...task, completed: true } : task
         )
       );
-      // Можно добавить уведомление об успешном выполнении
     } catch (err) {
       console.error('Error completing task:', err);
-      // Можно добавить уведомление об ошибке
     }
   };
 
+  // Удаление задачи
   const handleTaskDelete = async (taskId: string) => {
     try {
       await deleteUserTask(taskId);
       setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-      // Можно добавить уведомление об успешном удалении
     } catch (err) {
       console.error('Error deleting task:', err);
-      // Можно добавить уведомление об ошибке
     }
   };
 
+  // Обновляем задачи после создания новой задачи
   const handleTaskCreate = () => {
     setIsModalOpen(false);
-    loadTasks(); // Перезагружаем список задач
+    loadTasks();
   };
 
+  // Фильтрация задач
   const filteredTasks = tasks.filter(task => {
     if (filter === 'active') return !task.completed;
     if (filter === 'completed') return task.completed;
