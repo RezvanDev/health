@@ -11,55 +11,90 @@ const api = axios.create({
 // Функция для получения данных Telegram
 const getTelegramAuthData = () => {
   if (!window.Telegram?.WebApp?.initDataUnsafe?.user) {
-    console.log('No Telegram WebApp data available');
+    console.warn('No Telegram WebApp data available');
     return null;
   }
 
   const user = window.Telegram.WebApp.initDataUnsafe.user;
-  const hash = window.Telegram.WebApp.initData;
-  
-  // Добавляем логирование
-  console.log('Telegram user data:', user);
-  console.log('Telegram hash:', hash);
-  
+  const initData = window.Telegram.WebApp.initData;
+
   return JSON.stringify({
     id: user.id,
-    hash: hash,
+    hash: initData,
     first_name: user.first_name,
     last_name: user.last_name,
     username: user.username
   });
 };
 
-// Добавляем перехватчик для аутентификации
+// Перехватчик для запросов
 api.interceptors.request.use(request => {
   const authData = getTelegramAuthData();
-  
   if (authData) {
     request.headers['X-Telegram-Auth-Data'] = authData;
-    // Добавляем логирование
-    console.log('Sending auth header:', request.headers['X-Telegram-Auth-Data']);
-  } else {
-    console.warn('No auth data available');
   }
-  
   return request;
 });
 
-// Добавляем логирование ответов
+// Перехватчик для ответов
 api.interceptors.response.use(
-  response => {
-    console.log('API Response:', response.data);
-    return response;
-  },
+  response => response,
   error => {
     console.error('API Error:', {
       status: error.response?.status,
-      data: error.response?.data,
-      headers: error.response?.headers
+      message: error.response?.data?.message,
+      details: error.response?.data
     });
     return Promise.reject(error);
   }
 );
 
-// ... rest of the code (interfaces and API methods) stays the same
+export interface UserTask {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  completed: boolean;
+  deadline?: string;
+  xp: number;
+  priority: 'low' | 'medium' | 'high';
+  repeat: 'none' | 'daily' | 'weekly' | 'monthly';
+  createdAt: string;
+}
+
+interface CreateTaskData extends Omit<UserTask, 'id' | 'completed' | 'createdAt'> {}
+
+// API функции
+const userTasksApi = {
+  // Получение списка задач пользователя
+  getUserTasks: async () => {
+    const { data } = await api.get<{ tasks: UserTask[] }>('/user-tasks');
+    return data.tasks;
+  },
+
+  // Создание новой задачи
+  createUserTask: async (taskData: CreateTaskData) => {
+    const { data } = await api.post<UserTask>('/user-tasks', taskData);
+    return data;
+  },
+
+  // Обновление статуса задачи
+  completeUserTask: async (taskId: string) => {
+    const { data } = await api.post<UserTask>(`/user-tasks/${taskId}/complete`);
+    return data;
+  },
+
+  // Удаление задачи
+  deleteUserTask: async (taskId: string) => {
+    await api.delete(`/user-tasks/${taskId}`);
+  }
+};
+
+export const {
+  getUserTasks,
+  createUserTask,
+  completeUserTask,
+  deleteUserTask
+} = userTasksApi;
+
+export default userTasksApi;
