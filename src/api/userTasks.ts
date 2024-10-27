@@ -10,9 +10,16 @@ const api = axios.create({
 
 // Добавляем перехватчик для аутентификации
 api.interceptors.request.use(request => {
-  if (window.Telegram?.WebApp?.initData) {
-    request.headers['X-Telegram-Auth-Data'] = window.Telegram.WebApp.initData;
+  const authData = JSON.stringify({
+    id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id,
+    hash: window.Telegram?.WebApp?.initData,
+    ...window.Telegram?.WebApp?.initDataUnsafe?.user
+  });
+
+  if (authData) {
+    request.headers['X-Telegram-Auth-Data'] = authData;
   }
+  
   return request;
 });
 
