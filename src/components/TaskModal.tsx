@@ -1,36 +1,52 @@
 import React, { useState } from 'react';
-import { X, Star, Heart, Brain, Gamepad, Compass, AlertCircle } from 'lucide-react';
+import { X, Star, Heart, Brain, Gamepad, Compass, AlertCircle, Loader2 } from 'lucide-react';
+import { userTasksApi, CreateUserTaskDTO, TaskCategory } from '../api/api';
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onTaskCreated: () => void;
 }
 
-export function TaskModal({ isOpen, onClose }: TaskModalProps) {
-  const [taskData, setTaskData] = useState({
-    title: '',
-    description: '',
-    category: 'finance',
-    priority: 'medium',
-    deadline: '',
-    repeat: 'none',
-    xp: 10
-  });
+const categories: { id: TaskCategory; name: string; icon: React.ReactNode }[] = [
+  { id: 'finance', name: 'Финансы', icon: <Star className="text-yellow-500" /> },
+  { id: 'relationships', name: 'Отношения', icon: <Heart className="text-red-500" /> },
+  { id: 'mindfulness', name: 'Осознанность', icon: <Brain className="text-purple-500" /> },
+  { id: 'entertainment', name: 'Развлечения', icon: <Gamepad className="text-blue-500" /> },
+  { id: 'meaning', name: 'Смысл жизни', icon: <Compass className="text-green-500" /> }
+];
 
-  const categories = [
-    { id: 'finance', name: 'Финансы', icon: <Star className="text-yellow-500" /> },
-    { id: 'relationships', name: 'Отношения', icon: <Heart className="text-red-500" /> },
-    { id: 'mindfulness', name: 'Осознанность', icon: <Brain className="text-purple-500" /> },
-    { id: 'entertainment', name: 'Развлечения', icon: <Gamepad className="text-blue-500" /> },
-    { id: 'meaning', name: 'Смысл жизни', icon: <Compass className="text-green-500" /> }
-  ];
+const initialTaskData: CreateUserTaskDTO = {
+  title: '',
+  description: '',
+  category: 'finance',
+  priority: 'medium',
+  repeat: 'none',
+  deadline: ''
+};
+
+export function TaskModal({ isOpen, onClose, onTaskCreated }: TaskModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [taskData, setTaskData] = useState<CreateUserTaskDTO>(initialTaskData);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Task data:', taskData);
-    onClose();
+    setLoading(true);
+    setError(null);
+
+    try {
+      await userTasksApi.createTask(taskData);
+      onTaskCreated();
+      setTaskData(initialTaskData);
+      onClose();
+    } catch (err) {
+      setError('Не удалось создать задачу. Попробуйте еще раз.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +61,7 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={loading}
           >
             <X size={20} className="text-gray-400" />
           </button>
@@ -52,6 +69,12 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
 
         {/* Форма */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Название
@@ -63,6 +86,7 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
               placeholder="Например: Прочитать книгу"
               required
+              disabled={loading}
             />
           </div>
 
@@ -76,6 +100,7 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
               rows={2}
               placeholder="Опишите подробности задачи..."
+              disabled={loading}
             />
           </div>
 
@@ -89,6 +114,7 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
                   key={category.id}
                   type="button"
                   onClick={() => setTaskData({ ...taskData, category: category.id })}
+                  disabled={loading}
                   className={`p-2 rounded-lg border ${
                     taskData.category === category.id
                       ? 'border-blue-500 bg-blue-50'
@@ -109,8 +135,9 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
               </label>
               <select
                 value={taskData.priority}
-                onChange={(e) => setTaskData({ ...taskData, priority: e.target.value })}
+                onChange={(e) => setTaskData({ ...taskData, priority: e.target.value as any })}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                disabled={loading}
               >
                 <option value="low">Низкий</option>
                 <option value="medium">Средний</option>
@@ -124,8 +151,9 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
               </label>
               <select
                 value={taskData.repeat}
-                onChange={(e) => setTaskData({ ...taskData, repeat: e.target.value })}
+                onChange={(e) => setTaskData({ ...taskData, repeat: e.target.value as any })}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                disabled={loading}
               >
                 <option value="none">Нет</option>
                 <option value="daily">Ежедневно</option>
@@ -144,6 +172,8 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
               value={taskData.deadline}
               onChange={(e) => setTaskData({ ...taskData, deadline: e.target.value })}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+              min={new Date().toISOString().split('T')[0]}
             />
           </div>
 
@@ -151,21 +181,30 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center text-xs text-blue-600">
               <AlertCircle size={16} className="mr-1" />
-              +{taskData.xp} XP за выполнение
+              +10 XP за выполнение
             </div>
             <div className="flex space-x-2">
               <button
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={loading}
               >
                 Отмена
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                disabled={loading}
+                className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center"
               >
-                Создать
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin mr-2" />
+                    Создание...
+                  </>
+                ) : (
+                  'Создать'
+                )}
               </button>
             </div>
           </div>
@@ -174,3 +213,5 @@ export function TaskModal({ isOpen, onClose }: TaskModalProps) {
     </div>
   );
 }
+
+export default TaskModal;

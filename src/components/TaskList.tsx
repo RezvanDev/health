@@ -1,46 +1,62 @@
-import React, { useState } from 'react';
-import { Plus, Filter, CheckCircle2, Circle, Star, Calendar, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Star, Calendar, Clock, Loader2, CheckCircle2, Circle } from 'lucide-react';
 import { TaskModal } from './TaskModal';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  completed: boolean;
-  deadline?: string;
-  xp: number;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: string;
-}
-
-const tasks: Task[] = [
-  {
-    id: '1',
-    title: 'Прочитать книгу по финансам',
-    description: 'Изучить основы инвестирования',
-    category: 'Финансы',
-    completed: false,
-    deadline: '2024-03-25',
-    xp: 10,
-    priority: 'high',
-    createdAt: '2024-03-20'
-  },
-  {
-    id: '2',
-    title: 'Медитация',
-    description: '15 минут практики осознанности',
-    category: 'Осознанность',
-    completed: true,
-    xp: 10,
-    priority: 'medium',
-    createdAt: '2024-03-20'
-  }
-];
+import { userTasksApi, UserTask } from '../api/api';
 
 export function TaskList() {
+  const [tasks, setTasks] = useState<UserTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Загрузка задач
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const userTasks = await userTasksApi.getTasks();
+      setTasks(userTasks);
+    } catch (err) {
+      setError('Не удалось загрузить задачи');
+      console.error('Error loading tasks:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  // Обработка создания новой задачи
+  const handleTaskCreated = async () => {
+    await loadTasks();
+  };
+
+  // Обработка выполнения задачи
+  const handleTaskCompletion = async (taskId: string) => {
+    try {
+      await userTasksApi.completeTask(taskId);
+      await loadTasks();
+    } catch (err) {
+      console.error('Error completing task:', err);
+      setError('Не удалось отметить задачу как выполненную');
+    }
+  };
+
+  // Обработка удаления задачи
+  const handleTaskDeletion = async (taskId: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить эту задачу?')) {
+      try {
+        await userTasksApi.deleteTask(taskId);
+        await loadTasks();
+      } catch (err) {
+        console.error('Error deleting task:', err);
+        setError('Не удалось удалить задачу');
+      }
+    }
+  };
 
   const filteredTasks = tasks.filter(task => {
     if (filter === 'active') return !task.completed;
@@ -48,11 +64,25 @@ export function TaskList() {
     return true;
   });
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <p className="mt-2 text-gray-500">Загрузка задач...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Заголовок и действия */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Мои задачи</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Мои задачи</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {tasks.length} {tasks.length === 1 ? 'задача' : 'задач'} всего
+          </p>
+        </div>
         <button
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl flex items-center space-x-2 hover:opacity-90 transition-opacity"
@@ -92,8 +122,33 @@ export function TaskList() {
 
       {/* Список задач */}
       <div className="space-y-3">
+        {error && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-center">
+            {error}
+          </div>
+        )}
+        
+        {!error && filteredTasks.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Star className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-gray-500 font-medium">Нет задач</h3>
+            <p className="text-gray-400 text-sm mt-1">
+              {filter === 'all' && 'Создайте свою первую задачу'}
+              {filter === 'active' && 'Нет активных задач'}
+              {filter === 'completed' && 'Нет завершённых задач'}
+            </p>
+          </div>
+        )}
+
         {filteredTasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard 
+            key={task.id} 
+            task={task} 
+            onComplete={handleTaskCompletion}
+            onDelete={handleTaskDeletion}
+          />
         ))}
       </div>
 
@@ -101,12 +156,19 @@ export function TaskList() {
       <TaskModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onTaskCreated={handleTaskCreated}
       />
     </div>
   );
 }
 
-function TaskCard({ task }: { task: Task }) {
+interface TaskCardProps {
+  task: UserTask;
+  onComplete: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+function TaskCard({ task, onComplete, onDelete }: TaskCardProps) {
   const priorityColors = {
     low: 'text-gray-400',
     medium: 'text-yellow-500',
@@ -118,7 +180,10 @@ function TaskCard({ task }: { task: Task }) {
       task.completed ? 'opacity-75' : ''
     }`}>
       <div className="flex items-start space-x-4">
-        <button className="mt-1">
+        <button 
+          className="mt-1"
+          onClick={() => !task.completed && onComplete(task.id)}
+        >
           {task.completed ? (
             <CheckCircle2 className="text-green-500" size={22} />
           ) : (
@@ -132,7 +197,9 @@ function TaskCard({ task }: { task: Task }) {
               <h3 className={`font-medium ${task.completed ? 'line-through text-gray-400' : ''}`}>
                 {task.title}
               </h3>
-              <p className="text-sm text-gray-500 mt-1">{task.description}</p>
+              {task.description && (
+                <p className="text-sm text-gray-500 mt-1">{task.description}</p>
+              )}
             </div>
             <Star className={priorityColors[task.priority]} size={18} />
           </div>
@@ -144,15 +211,25 @@ function TaskCard({ task }: { task: Task }) {
             {task.deadline && (
               <span className="text-xs flex items-center text-gray-500">
                 <Calendar size={14} className="mr-1" />
-                {task.deadline}
+                {new Date(task.deadline).toLocaleDateString()}
               </span>
             )}
             <span className="text-xs flex items-center text-gray-500">
               <Clock size={14} className="mr-1" />
-              {task.createdAt}
+              {new Date(task.createdAt).toLocaleDateString()}
             </span>
             <span className="text-xs text-emerald-500 ml-auto">+{task.xp} XP</span>
           </div>
+
+          {/* Кнопка удаления */}
+          {!task.completed && (
+            <button
+              onClick={() => onDelete(task.id)}
+              className="mt-2 text-xs text-red-500 hover:text-red-600"
+            >
+              Удалить задачу
+            </button>
+          )}
         </div>
       </div>
     </div>
