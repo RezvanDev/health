@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 
-interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData: string;
-      };
-    };
-  }
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
