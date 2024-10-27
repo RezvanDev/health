@@ -50,136 +50,141 @@ export function TaskModal({ isOpen, onClose, onTaskCreated }: TaskModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 md:p-0">
-      <div className="bg-white rounded-xl w-full max-w-sm mx-auto relative overflow-y-auto max-h-[90vh] md:max-h-[80vh]">
-        {/* Шапка */}
-        <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold">Новая задача</h2>
-            <p className="text-xs text-gray-500">+10 XP за выполнение</p>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm relative flex flex-col h-[600px]">
+        {/* Шапка - фиксированная */}
+        <div className="flex-none px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold">Новая задача</h2>
+              <p className="text-xs text-gray-500">+10 XP за выполнение</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={loading}
+            >
+              <X size={20} className="text-gray-400" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-            disabled={loading}
-          >
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
-
-        {/* Форма */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
               {error}
             </div>
           )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Название
-            </label>
-            <input
-              type="text"
-              value={taskData.title}
-              onChange={(e) => setTaskData({ ...taskData, title: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              placeholder="Например: Прочитать книгу"
-              required
-              disabled={loading}
-            />
-          </div>
+        {/* Форма - скроллируемая */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Название
+              </label>
+              <input
+                type="text"
+                value={taskData.title}
+                onChange={(e) => setTaskData({ ...taskData, title: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                placeholder="Например: Прочитать книгу"
+                required
+                disabled={loading}
+              />
+            </div>
 
-          <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Описание
-  </label>
-  <textarea
-    value={taskData.description}
-    onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
-    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow resize-none"
-    rows={3}
-    placeholder="Опишите подробности задачи..."
-    disabled={loading}
-    style={{ minHeight: '80px', maxHeight: '80px' }}
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Описание
+              </label>
+              <textarea
+                value={taskData.description}
+                onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow resize-none"
+                rows={3}
+                placeholder="Опишите подробности задачи..."
+                disabled={loading}
+                style={{ height: '80px' }}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Категория
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => setTaskData({ ...taskData, category: category.id })}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Категория
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setTaskData({ ...taskData, category: category.id })}
+                    disabled={loading}
+                    className={`p-2 rounded-lg border ${
+                      taskData.category === category.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-200'
+                    } transition-colors flex flex-col items-center gap-1`}
+                  >
+                    {category.icon}
+                    <span className="text-xs font-medium">{category.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Приоритет
+                </label>
+                <select
+                  value={taskData.priority}
+                  onChange={(e) => setTaskData({ ...taskData, priority: e.target.value as any })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                   disabled={loading}
-                  className={`p-2 rounded-lg border ${
-                    taskData.category === category.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-200'
-                  } transition-colors flex flex-col items-center gap-1`}
                 >
-                  {category.icon}
-                  <span className="text-xs font-medium">{category.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+                  <option value="low">Низкий</option>
+                  <option value="medium">Средний</option>
+                  <option value="high">Высокий</option>
+                </select>
+              </div>
 
-          <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Повторение
+                </label>
+                <select
+                  value={taskData.repeat}
+                  onChange={(e) => setTaskData({ ...taskData, repeat: e.target.value as any })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  disabled={loading}
+                >
+                  <option value="none">Нет</option>
+                  <option value="daily">Ежедневно</option>
+                  <option value="weekly">Еженедельно</option>
+                  <option value="monthly">Ежемесячно</option>
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Приоритет
+                Срок выполнения
               </label>
-              <select
-                value={taskData.priority}
-                onChange={(e) => setTaskData({ ...taskData, priority: e.target.value as any })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              <input
+                type="date"
+                value={taskData.deadline}
+                onChange={(e) => setTaskData({ ...taskData, deadline: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
-              >
-                <option value="low">Низкий</option>
-                <option value="medium">Средний</option>
-                <option value="high">Высокий</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Повторение
-              </label>
-              <select
-                value={taskData.repeat}
-                onChange={(e) => setTaskData({ ...taskData, repeat: e.target.value as any })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                disabled={loading}
-              >
-                <option value="none">Нет</option>
-                <option value="daily">Ежедневно</option>
-                <option value="weekly">Еженедельно</option>
-                <option value="monthly">Ежемесячно</option>
-              </select>
+                min={new Date().toISOString().split('T')[0]}
+              />
             </div>
           </div>
+        </form>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Срок выполнения
-            </label>
-            <input
-              type="date"
-              value={taskData.deadline}
-              onChange={(e) => setTaskData({ ...taskData, deadline: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={loading}
-              min={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-
-          {/* Кнопки действий */}
-          <div className="flex items-center justify-between pt-2">
+        {/* Футер - фиксированный */}
+        <div className="flex-none px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
             <div className="flex items-center text-xs text-blue-600">
               <AlertCircle size={16} className="mr-1" />
               +10 XP за выполнение
@@ -194,7 +199,7 @@ export function TaskModal({ isOpen, onClose, onTaskCreated }: TaskModalProps) {
                 Отмена
               </button>
               <button
-                type="submit"
+                onClick={handleSubmit}
                 disabled={loading}
                 className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center"
               >
@@ -209,7 +214,7 @@ export function TaskModal({ isOpen, onClose, onTaskCreated }: TaskModalProps) {
               </button>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
