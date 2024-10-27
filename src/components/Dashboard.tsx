@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Heart, Star, Target, Compass, CheckCircle } from 'lucide-react';
+import { Brain, Heart, Star, Target, Compass, CheckCircle, Trophy, Sparkles } from 'lucide-react';
 import { fetchTasks, completeTask } from '../api/tasks';
 
 interface Task {
@@ -16,18 +16,33 @@ interface CompletionNotification {
   xp: number;
 }
 
+interface User {
+  firstName?: string;
+  username?: string;
+}
+
+const getUserInfo = (): User | null => {
+  if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    return {
+      firstName: window.Telegram.WebApp.initDataUnsafe.user.first_name,
+      username: window.Telegram.WebApp.initDataUnsafe.user.username
+    };
+  }
+  return null;
+};
+
 const getIconComponent = (category: string) => {
   switch (category) {
     case 'finance':
-      return <Star className="text-yellow-500" />;
+      return <Star className="text-yellow-400 animate-pulse" />;
     case 'relationships':
-      return <Heart className="text-red-500" />;
+      return <Heart className="text-red-400 animate-pulse" />;
     case 'mindfulness':
-      return <Brain className="text-purple-500" />;
+      return <Brain className="text-purple-400 animate-pulse" />;
     case 'meaning':
-      return <Compass className="text-green-500" />;
+      return <Compass className="text-green-400 animate-pulse" />;
     default:
-      return <Target className="text-blue-500" />;
+      return <Target className="text-blue-400 animate-pulse" />;
   }
 };
 
@@ -41,10 +56,13 @@ export function Dashboard() {
     xp: 0
   });
 
+  const user = getUserInfo();
+  const greeting = user?.firstName || user?.username || 'путешественник';
+
   const quotes = [
-    "Каждый день - это новая возможность стать лучше",
-    "Маленькие шаги ведут к большим достижениям",
-    "Путь в тысячу ли начинается с первого шага"
+    "Каждое достижение начинается с решения попробовать",
+    "Маленький прогресс каждый день ведет к большим результатам",
+    "Действуй сейчас, создавай свое будущее"
   ];
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
@@ -95,134 +113,142 @@ export function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-[var(--tg-theme-bg-color)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-[var(--tg-theme-button-color)] border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4">
-      {notification.show && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 animate-slide-in-top">
-          <CheckCircle size={20} />
-          <span>+{notification.xp} XP получено!</span>
-        </div>
-      )}
-
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">
-            Добро пожаловать!
-          </h1>
-          <p className="text-lg opacity-90 italic">{randomQuote}</p>
-        </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
-      </div>
-
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setTaskType('daily')}
-          className={`px-4 py-2 rounded-lg ${
-            taskType === 'daily' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-        >
-          Ежедневные
-        </button>
-        <button
-          onClick={() => setTaskType('weekly')}
-          className={`px-4 py-2 rounded-lg ${
-            taskType === 'weekly' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-        >
-          Еженедельные
-        </button>
-        <button
-          onClick={() => setTaskType('monthly')}
-          className={`px-4 py-2 rounded-lg ${
-            taskType === 'monthly' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-          }`}
-        >
-          Ежемесячные
-        </button>
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center">
-            <Target className="mr-2 text-blue-500" size={24} />
-            {taskType === 'daily' && 'Задания на сегодня'}
-            {taskType === 'weekly' && 'Задания на неделю'}
-            {taskType === 'monthly' && 'Задания на месяц'}
-          </h2>
-          <span className="text-sm text-gray-500">
-            Доступно +{totalAvailableXP} XP
-          </span>
-        </div>
-
-        {error && (
-          <div className="text-center py-8">
-            <p className="text-red-500">{error}</p>
+    <div className="min-h-screen bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)]">
+      <div className="space-y-6 max-w-4xl mx-auto p-4">
+        {notification.show && (
+          <div className="fixed top-4 right-4 bg-[var(--tg-theme-button-color)] text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-2 animate-slide-in-top z-50">
+            <Trophy className="text-yellow-300" size={20} />
+            <span>+{notification.xp} XP получено!</span>
           </div>
         )}
 
-        {!error && tasks.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p>Нет доступных заданий</p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[var(--tg-theme-button-color)] to-[var(--tg-theme-secondary-bg-color)] p-6">
+          <div className="relative z-10">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="text-yellow-300" size={24} />
+              <h1 className="text-2xl font-bold text-white">
+                Приветствую, {greeting}!
+              </h1>
+            </div>
+            <p className="mt-2 text-lg opacity-90 italic text-white font-light">
+              {randomQuote}
+            </p>
           </div>
-        )}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
+        </div>
 
-        {!error && tasks.length > 0 && (
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className={`p-4 rounded-xl bg-white shadow-sm border border-gray-100 transition-all duration-300 ${
-                  task.completed 
-                    ? 'opacity-75 border-green-200 bg-green-50' 
-                    : 'hover:border-blue-200'
-                }`}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="p-2 rounded-lg bg-gray-50">
-                    {task.completed ? (
-                      <CheckCircle className="text-green-500" size={24} />
-                    ) : getIconComponent(task.category)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className={`font-medium ${task.completed ? 'text-gray-500' : ''}`}>
-                          {task.title}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                      </div>
-                      <span className={`text-sm font-medium ${
-                        task.completed ? 'text-green-500' : 'text-emerald-500'
-                      }`}>
-                        {task.completed ? 'Получено' : '+'}{task.xp} XP
-                      </span>
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+          {(['daily', 'weekly', 'monthly'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setTaskType(type)}
+              className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-300 ${
+                taskType === type 
+                  ? 'bg-[var(--tg-theme-button-color)] text-white shadow-lg transform scale-105' 
+                  : 'bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-hint-color)] hover:bg-opacity-80'
+              }`}
+            >
+              {type === 'daily' && 'Ежедневные'}
+              {type === 'weekly' && 'Еженедельные'}
+              {type === 'monthly' && 'Ежемесячные'}
+            </button>
+          ))}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <Target className="mr-2 text-[var(--tg-theme-button-color)]" size={24} />
+              {taskType === 'daily' && 'Задания на сегодня'}
+              {taskType === 'weekly' && 'Задания на неделю'}
+              {taskType === 'monthly' && 'Задания на месяц'}
+            </h2>
+            <div className="flex items-center space-x-1 px-3 py-1 rounded-full bg-[var(--tg-theme-secondary-bg-color)]">
+              <Trophy size={16} className="text-yellow-400" />
+              <span className="text-sm font-medium">
+                +{totalAvailableXP} XP
+              </span>
+            </div>
+          </div>
+
+          {error && (
+            <div className="text-center py-8 rounded-xl bg-red-50">
+              <p className="text-red-500">{error}</p>
+            </div>
+          )}
+
+          {!error && tasks.length === 0 && (
+            <div className="text-center py-12 rounded-xl bg-[var(--tg-theme-secondary-bg-color)]">
+              <Target size={48} className="mx-auto mb-4 text-[var(--tg-theme-hint-color)]" />
+              <p className="text-[var(--tg-theme-hint-color)]">Нет доступных заданий</p>
+            </div>
+          )}
+
+          {!error && tasks.length > 0 && (
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`p-4 rounded-xl transition-all duration-300 ${
+                    task.completed 
+                      ? 'bg-[var(--tg-theme-secondary-bg-color)] opacity-75' 
+                      : 'bg-[var(--tg-theme-bg-color)] shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-2 rounded-lg ${
+                      task.completed 
+                        ? 'bg-green-100' 
+                        : 'bg-[var(--tg-theme-secondary-bg-color)]'
+                    }`}>
+                      {task.completed ? (
+                        <CheckCircle className="text-green-500" size={24} />
+                      ) : getIconComponent(task.category)}
                     </div>
-                    {!task.completed && (
-                      <button 
-                        onClick={() => handleTaskCompletion(task.id)}
-                        className="mt-3 w-full py-2 px-4 rounded-lg bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition-colors"
-                      >
-                        Выполнено
-                      </button>
-                    )}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className={`font-medium ${
+                            task.completed 
+                              ? 'text-[var(--tg-theme-hint-color)]' 
+                              : ''
+                          }`}>
+                            {task.title}
+                          </h3>
+                          <p className="text-sm text-[var(--tg-theme-hint-color)] mt-1">
+                            {task.description}
+                          </p>
+                        </div>
+                        <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                          task.completed 
+                            ? 'bg-green-100 text-green-600' 
+                            : 'bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-button-color)]'
+                        }`}>
+                          {task.completed ? 'Получено' : '+'}{task.xp} XP
+                        </span>
+                      </div>
+                      {!task.completed && (
+                        <button 
+                          onClick={() => handleTaskCompletion(task.id)}
+                          className="mt-3 w-full py-2.5 px-4 rounded-xl bg-[var(--tg-theme-button-color)] text-white font-medium hover:opacity-90 transition-opacity"
+                        >
+                          Выполнено
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
