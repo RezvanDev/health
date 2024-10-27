@@ -137,11 +137,32 @@ export function Dashboard() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
         </div>
 
+        {/* Кнопки для переключения между ежедневными, еженедельными и ежемесячными заданиями */}
+        <div className="flex justify-center space-x-4 mb-6">
+          {(['daily', 'weekly', 'monthly'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setTaskType(type)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                taskType === type 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {type === 'daily' && 'Ежедневные'}
+              {type === 'weekly' && 'Еженедельные'}
+              {type === 'monthly' && 'Ежемесячные'}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center">
               <Target className="mr-2 text-blue-500" size={24} />
-              Рекомендации на сегодня
+              {taskType === 'daily' && 'Рекомендации на сегодня'}
+              {taskType === 'weekly' && 'Рекомендации на неделю'}
+              {taskType === 'monthly' && 'Рекомендации на месяц'}
             </h2>
             <span className="text-sm text-gray-500">
               Доступно +{totalAvailableXP} XP
@@ -213,4 +234,3 @@ export function Dashboard() {
 }
 
 export default Dashboard;
-
