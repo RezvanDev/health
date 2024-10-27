@@ -34,15 +34,15 @@ const getUserInfo = (): User | null => {
 const getIconComponent = (category: string) => {
   switch (category) {
     case 'finance':
-      return <Star className="text-yellow-400 animate-pulse" />;
+      return <Star className="text-yellow-400" />;
     case 'relationships':
-      return <Heart className="text-red-400 animate-pulse" />;
+      return <Heart className="text-red-400" />;
     case 'mindfulness':
-      return <Brain className="text-purple-400 animate-pulse" />;
+      return <Brain className="text-purple-400" />;
     case 'meaning':
-      return <Compass className="text-green-400 animate-pulse" />;
+      return <Compass className="text-green-400" />;
     default:
-      return <Target className="text-blue-400 animate-pulse" />;
+      return <Target className="text-blue-400" />;
   }
 };
 
@@ -120,7 +120,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)]">
+    <div className="min-h-screen bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)] overflow-hidden">
       <div className="space-y-6 max-w-4xl mx-auto p-4">
         {notification.show && (
           <div className="fixed top-4 right-4 bg-[var(--tg-theme-button-color)] text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-2 animate-slide-in-top z-50">
@@ -141,17 +141,16 @@ export function Dashboard() {
               {randomQuote}
             </p>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
         </div>
 
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 mb-4 pb-2">
           {(['daily', 'weekly', 'monthly'] as const).map((type) => (
             <button
               key={type}
               onClick={() => setTaskType(type)}
-              className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-300 ${
+              className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-300 w-full ${
                 taskType === type 
-                  ? 'bg-[var(--tg-theme-button-color)] text-white shadow-lg transform scale-105' 
+                  ? 'bg-[var(--tg-theme-button-color)] text-white' 
                   : 'bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-hint-color)] hover:bg-opacity-80'
               }`}
             >
@@ -198,8 +197,8 @@ export function Dashboard() {
                   key={task.id}
                   className={`p-4 rounded-xl transition-all duration-300 ${
                     task.completed 
-                      ? 'bg-[var(--tg-theme-secondary-bg-color)] opacity-75' 
-                      : 'bg-[var(--tg-theme-bg-color)] shadow-md hover:shadow-lg'
+                      ? 'bg-[var(--tg-theme-secondary-bg-color)] opacity-50' 
+                      : 'bg-[var(--tg-theme-secondary-bg-color)]'
                   }`}
                 >
                   <div className="flex items-start space-x-4">
