@@ -137,11 +137,39 @@ export function Dashboard() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
         </div>
 
+        {/* Кнопки для переключения между ежедневными, еженедельными и ежемесячными заданиями */}
+        <div className="flex justify-center space-x-2 mb-6">
+          <button
+            onClick={() => setTaskType('daily')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              taskType === 'daily' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Ежедневные
+          </button>
+          <button
+            onClick={() => setTaskType('weekly')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              taskType === 'weekly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Еженедельные
+          </button>
+          <button
+            onClick={() => setTaskType('monthly')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              taskType === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Ежемесячные
+          </button>
+        </div>
+
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center">
               <Target className="mr-2 text-blue-500" size={24} />
-              Рекомендации на сегодня
+              {taskType === 'daily' ? 'Рекомендации на сегодня' : taskType === 'weekly' ? 'Рекомендации на неделю' : 'Рекомендации на месяц'}
             </h2>
             <span className="text-sm text-gray-500">
               Доступно +{totalAvailableXP} XP
