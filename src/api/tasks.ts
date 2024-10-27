@@ -8,16 +8,13 @@ const api = axios.create({
   }
 });
 
-// Добавляем данные Telegram в каждый запрос
+// Добавляем перехватчик для логирования
 api.interceptors.request.use(request => {
-  const telegramInitData = window.Telegram?.WebApp?.initData;
-  if (telegramInitData) {
-    request.headers['X-Telegram-Auth-Data'] = telegramInitData;
-  }
   console.log('Sending request:', {
     url: request.url,
     method: request.method,
-    headers: request.headers
+    headers: request.headers,
+    data: request.data
   });
   return request;
 });
@@ -30,7 +27,8 @@ api.interceptors.response.use(
   error => {
     console.error('API Error:', {
       message: error.message,
-      response: error.response?.data
+      response: error.response?.data,
+      status: error.response?.status
     });
     return Promise.reject(error);
   }
