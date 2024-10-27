@@ -91,18 +91,19 @@ export function TaskModal({ isOpen, onClose, onTaskCreated }: TaskModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Описание
-            </label>
-            <textarea
-              value={taskData.description}
-              onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
-              rows={2}
-              placeholder="Опишите подробности задачи..."
-              disabled={loading}
-            />
-          </div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Описание
+  </label>
+  <textarea
+    value={taskData.description}
+    onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
+    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow resize-none"
+    rows={3}
+    placeholder="Опишите подробности задачи..."
+    disabled={loading}
+    style={{ minHeight: '80px', maxHeight: '80px' }}
+  />
+</div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
