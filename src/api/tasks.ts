@@ -4,14 +4,17 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
-    // Добавляем заголовок для ngrok
     'ngrok-skip-browser-warning': 'true'
   }
 });
 
-// Добавляем перехватчик для логирования
+// Добавляем данные Telegram в каждый запрос
 api.interceptors.request.use(request => {
-  console.log('Starting Request:', {
+  const telegramInitData = window.Telegram?.WebApp?.initData;
+  if (telegramInitData) {
+    request.headers['X-Telegram-Auth-Data'] = telegramInitData;
+  }
+  console.log('Sending request:', {
     url: request.url,
     method: request.method,
     headers: request.headers
@@ -34,13 +37,8 @@ api.interceptors.response.use(
 );
 
 export const fetchTasks = async (type: 'daily' | 'weekly' | 'monthly') => {
-  try {
-    const { data } = await api.get(`/tasks?type=${type}`);
-    return data;
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    throw error;
-  }
+  const { data } = await api.get(`/tasks?type=${type}`);
+  return data;
 };
 
 export const completeTask = async (taskId: string) => {
