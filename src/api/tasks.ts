@@ -8,8 +8,28 @@ const api = axios.create({
   }
 });
 
-// Добавляем перехватчик для логирования
+// Функция для получения initData из Telegram WebApp
+const getTelegramInitData = () => {
+  if (window.Telegram?.WebApp?.initData) {
+    return window.Telegram.WebApp.initData;
+  }
+  // Для тестирования можно вернуть тестовый initData
+  return JSON.stringify({
+    id: "test_user",
+    first_name: "Test",
+    last_name: "User",
+    username: "testuser",
+    hash: "test_hash"
+  });
+};
+
+// Добавляем перехватчик для добавления auth data
 api.interceptors.request.use(request => {
+  const initData = getTelegramInitData();
+  if (initData) {
+    request.headers['X-Telegram-Auth-Data'] = initData;
+  }
+  
   console.log('Sending request:', {
     url: request.url,
     method: request.method,
