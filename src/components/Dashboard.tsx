@@ -11,61 +11,31 @@ interface Task {
   completed: boolean;
 }
 
-type TaskType = 'daily' | 'weekly' | 'monthly';
-
 interface CompletionNotification {
   show: boolean;
   xp: number;
 }
 
-const TaskTypeSelector = ({ 
-  currentType, 
-  onChange 
-}: { 
-  currentType: 'daily' | 'weekly' | 'monthly', 
-  onChange: (type: 'daily' | 'weekly' | 'monthly') => void 
-}) => {
-  return (
-    <div className="flex gap-2 mb-4">
-      <button
-        onClick={() => onChange('daily')}
-        className={`px-4 py-2 rounded-lg ${
-          currentType === 'daily' 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-        }`}
-      >
-        Ежедневные
-      </button>
-      <button
-        onClick={() => onChange('weekly')}
-        className={`px-4 py-2 rounded-lg ${
-          currentType === 'weekly' 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-        }`}
-      >
-        Еженедельные
-      </button>
-      <button
-        onClick={() => onChange('monthly')}
-        className={`px-4 py-2 rounded-lg ${
-          currentType === 'monthly' 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-        }`}
-      >
-        Ежемесячные
-      </button>
-    </div>
-  );
+const getIconComponent = (category: string) => {
+  switch (category) {
+    case 'finance':
+      return <Star className="text-yellow-500" />;
+    case 'relationships':
+      return <Heart className="text-red-500" />;
+    case 'mindfulness':
+      return <Brain className="text-purple-500" />;
+    case 'meaning':
+      return <Compass className="text-green-500" />;
+    default:
+      return <Target className="text-blue-500" />;
+  }
 };
 
 export function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [taskType, setTaskType] = useState<TaskType>('daily');
+  const [taskType, setTaskType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [notification, setNotification] = useState<CompletionNotification>({
     show: false,
     xp: 0
@@ -78,51 +48,37 @@ export function Dashboard() {
   ];
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-  const getIconComponent = (category: string) => {
-    switch (category) {
-      case 'finance':
-        return <Star className="text-yellow-500" />;
-      case 'relationships':
-        return <Heart className="text-red-500" />;
-      case 'mindfulness':
-        return <Brain className="text-purple-500" />;
-      case 'meaning':
-        return <Compass className="text-green-500" />;
-      default:
-        return <Target className="text-blue-500" />;
-    }
-  };
-
   useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        setLoading(true);
-        const response = await fetchTasks(taskType);
-        setTasks(response.tasks);
-        setError(null);
-      } catch (err) {
-        setError('Не удалось загрузить задания');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadTasks();
   }, [taskType]);
+
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchTasks(taskType);
+      setTasks(response.tasks || []);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError('Не удалось загрузить задания');
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleTaskCompletion = async (taskId: string) => {
     try {
       const updatedTask = await completeTask(taskId);
       setTasks(currentTasks =>
         currentTasks.map(task =>
-          task.id === taskId ? updatedTask : task
+          task.id === taskId ? { ...task, completed: true } : task
         )
       );
       showCompletionNotification(updatedTask.xp);
     } catch (err) {
-      setError('Не удалось отметить задание как выполненное');
       console.error(err);
+      setError('Не удалось отметить задание как выполненное');
     }
   };
 
@@ -133,9 +89,9 @@ export function Dashboard() {
     }, 3000);
   };
 
-  const totalAvailableXP = tasks
-    .filter(task => !task.completed)
-    .reduce((sum, task) => sum + task.xp, 0);
+  const totalAvailableXP = tasks && tasks.length > 0
+    ? tasks.filter(task => !task.completed).reduce((sum, task) => sum + task.xp, 0)
+    : 0;
 
   if (loading) {
     return (
@@ -145,20 +101,8 @@ export function Dashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-center">
-          <p className="text-xl font-semibold mb-2">Произошла ошибка</p>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-4">
-      {/* Уведомление о выполнении */}
       {notification.show && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 animate-slide-in-top">
           <CheckCircle size={20} />
@@ -166,7 +110,6 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Приветствие и мотивация */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
         <div className="relative z-10">
           <h1 className="text-3xl font-bold mb-2">
@@ -177,13 +120,39 @@ export function Dashboard() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
       </div>
 
-      {/* Селектор типа заданий */}
-      <TaskTypeSelector 
-        currentType={taskType} 
-        onChange={setTaskType}
-      />
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setTaskType('daily')}
+          className={`px-4 py-2 rounded-lg ${
+            taskType === 'daily' 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+        >
+          Ежедневные
+        </button>
+        <button
+          onClick={() => setTaskType('weekly')}
+          className={`px-4 py-2 rounded-lg ${
+            taskType === 'weekly' 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+        >
+          Еженедельные
+        </button>
+        <button
+          onClick={() => setTaskType('monthly')}
+          className={`px-4 py-2 rounded-lg ${
+            taskType === 'monthly' 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+        >
+          Ежемесячные
+        </button>
+      </div>
 
-      {/* Рекомендации */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center">
@@ -197,11 +166,19 @@ export function Dashboard() {
           </span>
         </div>
 
-        {tasks.length === 0 ? (
+        {error && (
+          <div className="text-center py-8">
+            <p className="text-red-500">{error}</p>
+          </div>
+        )}
+
+        {!error && tasks.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <p>Нет доступных заданий</p>
           </div>
-        ) : (
+        )}
+
+        {!error && tasks.length > 0 && (
           <div className="space-y-3">
             {tasks.map((task) => (
               <div
