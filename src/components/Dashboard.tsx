@@ -138,101 +138,95 @@ export function Dashboard() {
         </div>
 
         {/* Кнопки для переключения между ежедневными, еженедельными и ежемесячными заданиями */}
-        <div className="flex justify-center space-x-2 mb-6">
-          <button
-            onClick={() => setTaskType('daily')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              taskType === 'daily' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Ежедневные
-          </button>
-          <button
-            onClick={() => setTaskType('weekly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              taskType === 'weekly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Еженедельные
-          </button>
-          <button
-            onClick={() => setTaskType('monthly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              taskType === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Ежемесячные
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center">
-              <Target className="mr-2 text-blue-500" size={24} />
-              {taskType === 'daily' ? 'Рекомендации на сегодня' : taskType === 'weekly' ? 'Рекомендации на неделю' : 'Рекомендации на месяц'}
-            </h2>
-            <span className="text-sm text-gray-500">
-              Доступно +{totalAvailableXP} XP
-            </span>
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+          <div className="flex justify-center items-center space-x-4 mb-4">
+            <button
+              onClick={() => setTaskType('daily')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors w-full text-center ${
+                taskType === 'daily'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Ежедневные
+            </button>
+            <button
+              onClick={() => setTaskType('weekly')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors w-full text-center ${
+                taskType === 'weekly'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Еженедельные
+            </button>
+            <button
+              onClick={() => setTaskType('monthly')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors w-full text-center ${
+                taskType === 'monthly'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Ежемесячные
+            </button>
           </div>
 
-          {!error && tasks.length > 0 && (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`p-4 rounded-xl bg-white shadow-sm border border-gray-100 transition-all duration-300 ${
-                    task.completed 
-                      ? 'opacity-75 border-green-200 bg-green-50' 
-                      : 'hover:border-blue-200'
-                  }`}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="p-2 rounded-lg bg-gray-50">
-                      {task.completed ? (
-                        <CheckCircle className="text-green-500" size={24} />
-                      ) : getIconComponent(task.category)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className={`font-medium ${task.completed ? 'text-gray-500' : ''}`}>
-                            {task.title}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                        </div>
-                        <span className={`text-sm font-medium ${
-                          task.completed ? 'text-green-500' : 'text-emerald-500'
-                        }`}>
-                          {task.completed ? 'Получено' : '+'}{task.xp} XP
-                        </span>
-                      </div>
-                      {!task.completed && (
-                        <button 
-                          onClick={() => handleTaskCompletion(task.id)}
-                          className="mt-3 w-full py-2 px-4 rounded-lg bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition-colors"
-                        >
-                          Выполнено
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Список задач */}
+          <div className="space-y-3">
+            {error ? (
+              <div className="text-center py-8 rounded-xl bg-red-50">
+                <p className="text-red-500">{error}</p>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="text-center py-12 rounded-xl bg-[var(--tg-theme-secondary-bg-color)]">
+                <Target size={48} className="mx-auto mb-4 text-[var(--tg-theme-hint-color)]" />
+                <p className="text-[var(--tg-theme-hint-color)]">Нет доступных заданий</p>
+              </div>
+            ) : (
+              tasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          {error && (
-            <div className="text-center py-8 rounded-xl bg-red-50">
-              <p className="text-red-500">{error}</p>
+function TaskCard({ task }: { task: Task }) {
+  return (
+    <div className={`p-4 rounded-xl bg-white shadow-sm border border-gray-100 transition-opacity ${
+      task.completed ? 'opacity-75' : ''
+    }`}>
+      <div className="flex items-start space-x-4">
+        <div className="p-2 rounded-lg bg-gray-50">
+          {task.completed ? (
+            <CheckCircle className="text-green-500" size={24} />
+          ) : getIconComponent(task.category)}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className={`font-medium ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                {task.title}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">{task.description}</p>
             </div>
-          )}
-          
-          {!error && tasks.length === 0 && (
-            <div className="text-center py-12 rounded-xl bg-[var(--tg-theme-secondary-bg-color)]">
-              <Target size={48} className="mx-auto mb-4 text-[var(--tg-theme-hint-color)]" />
-              <p className="text-[var(--tg-theme-hint-color)]">Нет доступных заданий</p>
-            </div>
+            <span className={`text-sm font-medium ${
+              task.completed ? 'text-green-500' : 'text-emerald-500'
+            }`}>
+              {task.completed ? 'Получено' : '+'}{task.xp} XP
+            </span>
+          </div>
+          {!task.completed && (
+            <button 
+              onClick={() => handleTaskCompletion(task.id)}
+              className="mt-3 w-full py-2 px-4 rounded-lg bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition-colors"
+            >
+              Выполнено
+            </button>
           )}
         </div>
       </div>
@@ -241,4 +235,3 @@ export function Dashboard() {
 }
 
 export default Dashboard;
-
