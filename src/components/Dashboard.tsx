@@ -1,17 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Heart, Star, Target, Compass, CheckCircle, Calendar, Clock } from 'lucide-react';
-import api, { SystemTask } from '../api';
+import { Brain, Heart, Star, Target, Compass, CheckCircle } from 'lucide-react';
+import { fetchTasks, completeTask } from '../api/tasks';
+
+interface Task {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  xp: number;
+  completed: boolean;
+}
+
+type TaskType = 'daily' | 'weekly' | 'monthly';
 
 interface CompletionNotification {
   show: boolean;
   xp: number;
 }
 
+const TaskTypeSelector = ({ 
+  currentType, 
+  onChange 
+}: { 
+  currentType: 'daily' | 'weekly' | 'monthly', 
+  onChange: (type: 'daily' | 'weekly' | 'monthly') => void 
+}) => {
+  return (
+    <div className="flex gap-2 mb-4">
+      <button
+        onClick={() => onChange('daily')}
+        className={`px-4 py-2 rounded-lg ${
+          currentType === 'daily' 
+            ? 'bg-blue-500 text-white' 
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+        }`}
+      >
+        Ежедневные
+      </button>
+      <button
+        onClick={() => onChange('weekly')}
+        className={`px-4 py-2 rounded-lg ${
+          currentType === 'weekly' 
+            ? 'bg-blue-500 text-white' 
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+        }`}
+      >
+        Еженедельные
+      </button>
+      <button
+        onClick={() => onChange('monthly')}
+        className={`px-4 py-2 rounded-lg ${
+          currentType === 'monthly' 
+            ? 'bg-blue-500 text-white' 
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+        }`}
+      >
+        Ежемесячные
+      </button>
+    </div>
+  );
+};
+
 export function Dashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [tasks, setTasks] = useState<SystemTask[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [taskType, setTaskType] = useState<TaskType>('daily');
   const [notification, setNotification] = useState<CompletionNotification>({
     show: false,
     xp: 0
@@ -24,51 +78,7 @@ export function Dashboard() {
   ];
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-  useEffect(() => {
-    loadTasks();
-  }, [selectedPeriod]);
-
-  const loadTasks = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await api.systemTasks.getAll(selectedPeriod);
-      
-      if (Array.isArray(response)) {
-        setTasks(response);
-      } else {
-        console.error('Invalid response format:', response);
-        setTasks([]);
-        setError('Неверный формат данных с сервера');
-      }
-    } catch (error) {
-      console.error('Error loading system tasks:', error);
-      setTasks([]);
-      setError('Ошибка загрузки рекомендаций');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTaskCompletion = async (taskId: string) => {
-    try {
-      const completedTask = await api.systemTasks.complete(taskId);
-      showCompletionNotification(completedTask.xp);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error completing task:', error);
-      setError('Ошибка при выполнении задачи');
-    }
-  };
-
-  const showCompletionNotification = (xp: number) => {
-    setNotification({ show: true, xp });
-    setTimeout(() => {
-      setNotification({ show: false, xp: 0 });
-    }, 3000);
-  };
-
-  const getCategoryIcon = (category: string) => {
+  const getIconComponent = (category: string) => {
     switch (category) {
       case 'finance':
         return <Star className="text-yellow-500" />;
@@ -83,40 +93,72 @@ export function Dashboard() {
     }
   };
 
-  const totalAvailableXP = tasks.filter(task => !task.completed).reduce((sum, task) => sum + (task.xp || 0), 0);
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchTasks(taskType);
+        setTasks(response.tasks);
+        setError(null);
+      } catch (err) {
+        setError('Не удалось загрузить задания');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const getPeriodLabel = (period: string) => {
-    switch (period) {
-      case 'daily': return 'Ежедневные';
-      case 'weekly': return 'Еженедельные';
-      case 'monthly': return 'Ежемесячные';
-      default: return '';
+    loadTasks();
+  }, [taskType]);
+
+  const handleTaskCompletion = async (taskId: string) => {
+    try {
+      const updatedTask = await completeTask(taskId);
+      setTasks(currentTasks =>
+        currentTasks.map(task =>
+          task.id === taskId ? updatedTask : task
+        )
+      );
+      showCompletionNotification(updatedTask.xp);
+    } catch (err) {
+      setError('Не удалось отметить задание как выполненное');
+      console.error(err);
     }
   };
 
-  const getPeriodIcon = (period: string) => {
-    switch (period) {
-      case 'daily':
-        return <Clock className="mr-2" size={18} />;
-      case 'weekly':
-        return <Calendar className="mr-2" size={18} />;
-      case 'monthly':
-        return <Target className="mr-2" size={18} />;
-      default:
-        return null;
-    }
+  const showCompletionNotification = (xp: number) => {
+    setNotification({ show: true, xp });
+    setTimeout(() => {
+      setNotification({ show: false, xp: 0 });
+    }, 3000);
   };
 
-  if (isLoading) {
+  const totalAvailableXP = tasks
+    .filter(task => !task.completed)
+    .reduce((sum, task) => sum + task.xp, 0);
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500 text-center">
+          <p className="text-xl font-semibold mb-2">Произошла ошибка</p>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-4">
+      {/* Уведомление о выполнении */}
       {notification.show && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 animate-slide-in-top">
           <CheckCircle size={20} />
@@ -124,57 +166,40 @@ export function Dashboard() {
         </div>
       )}
 
-      {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg">
-          {error}
-        </div>
-      )}
-
+      {/* Приветствие и мотивация */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
         <div className="relative z-10">
           <h1 className="text-3xl font-bold mb-2">
-            Добро пожаловать, Александр!
+            Добро пожаловать!
           </h1>
           <p className="text-lg opacity-90 italic">{randomQuote}</p>
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 transform rotate-45 translate-x-32 -translate-y-32"></div>
       </div>
 
+      {/* Селектор типа заданий */}
+      <TaskTypeSelector 
+        currentType={taskType} 
+        onChange={setTaskType}
+      />
+
+      {/* Рекомендации */}
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center">
             <Target className="mr-2 text-blue-500" size={24} />
-            Рекомендации
+            {taskType === 'daily' && 'Задания на сегодня'}
+            {taskType === 'weekly' && 'Задания на неделю'}
+            {taskType === 'monthly' && 'Задания на месяц'}
           </h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">
-              Доступно +{totalAvailableXP} XP
-            </span>
-          </div>
+          <span className="text-sm text-gray-500">
+            Доступно +{totalAvailableXP} XP
+          </span>
         </div>
 
-        <div className="flex space-x-2 mb-6">
-          {['daily', 'weekly', 'monthly'].map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period as 'daily' | 'weekly' | 'monthly')}
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                selectedPeriod === period
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {getPeriodIcon(period)}
-              {getPeriodLabel(period)}
-            </button>
-          ))}
-        </div>
-
-        {!Array.isArray(tasks) || tasks.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium mb-2">Нет активных задач</h3>
-            <p className="text-sm">На этот период пока нет рекомендаций</p>
+        {tasks.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>Нет доступных заданий</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -191,7 +216,7 @@ export function Dashboard() {
                   <div className="p-2 rounded-lg bg-gray-50">
                     {task.completed ? (
                       <CheckCircle className="text-green-500" size={24} />
-                    ) : getCategoryIcon(task.category)}
+                    ) : getIconComponent(task.category)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
