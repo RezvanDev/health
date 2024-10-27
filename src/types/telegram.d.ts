@@ -12,17 +12,18 @@ interface TelegramWebApp {
       auth_date: number;
       hash: string;
     };
-    showPopup(params: { 
+    colorScheme: 'light' | 'dark';
+    showPopup: (params: { 
       title?: string;
       message: string;
       buttons?: Array<{
         text: string;
         type?: 'default' | 'ok' | 'close' | 'cancel';
       }>;
-    }): void;
-    close(): void;
-    ready(): void;
-    expand(): void;
+    }) => void;
+    close: () => void;
+    ready: () => void;
+    expand: () => void;
   }
   
   declare global {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, ListTodo, Users, Trophy, User } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TaskList } from './components/TaskList';
@@ -8,6 +8,19 @@ import { Profile } from './components/Profile';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Добавляем эффект для инициализации Telegram WebApp
+  useEffect(() => {
+    // Инициализируем Telegram WebApp
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      // Расширяем окно на весь экран
+      window.Telegram.WebApp.expand();
+
+      // Устанавливаем тему
+      document.documentElement.className = window.Telegram.WebApp.colorScheme;
+    }
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -74,12 +87,12 @@ function App() {
   );
 }
 
-function NavButton({ 
-  icon, 
-  label, 
-  active, 
-  onClick 
-}: { 
+function NavButton({
+  icon,
+  label,
+  active,
+  onClick
+}: {
   icon: React.ReactNode;
   label: string;
   active: boolean;

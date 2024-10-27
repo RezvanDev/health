@@ -8,19 +8,26 @@ const api = axios.create({
   }
 });
 
-// Функция для получения initData из Telegram WebApp
+// Получение реальных данных Telegram WebApp
 const getTelegramInitData = () => {
-  if (window.Telegram?.WebApp?.initData) {
-    return window.Telegram.WebApp.initData;
+  if (window.Telegram?.WebApp) {
+    const webAppData = {
+      ...window.Telegram.WebApp.initDataUnsafe,
+      hash: window.Telegram.WebApp.initData
+    };
+    
+    // Проверяем, что у нас есть данные пользователя
+    if (webAppData.user) {
+      return JSON.stringify({
+        id: webAppData.user.id,
+        first_name: webAppData.user.first_name,
+        last_name: webAppData.user.last_name,
+        username: webAppData.user.username,
+        hash: webAppData.hash
+      });
+    }
   }
-  // Для тестирования можно вернуть тестовый initData
-  return JSON.stringify({
-    id: "test_user",
-    first_name: "Test",
-    last_name: "User",
-    username: "testuser",
-    hash: "test_hash"
-  });
+  return null;
 };
 
 // Добавляем перехватчик для добавления auth data
@@ -28,6 +35,8 @@ api.interceptors.request.use(request => {
   const initData = getTelegramInitData();
   if (initData) {
     request.headers['X-Telegram-Auth-Data'] = initData;
+  } else {
+    console.warn('Telegram WebApp data not available');
   }
   
   console.log('Sending request:', {
