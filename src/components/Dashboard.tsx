@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Heart, Star, Target, Compass, CheckCircle, Trophy, Sparkles } from 'lucide-react';
+import { Target, CheckCircle } from 'lucide-react';
 import { fetchTasks, completeTask } from '../api/tasks';
 
 interface Task {
@@ -29,21 +29,6 @@ const getUserInfo = (): User | null => {
     };
   }
   return null;
-};
-
-const getIconComponent = (category: string) => {
-  switch (category) {
-    case 'finance':
-      return <Star className="text-yellow-500" />;
-    case 'relationships':
-      return <Heart className="text-red-500" />;
-    case 'mindfulness':
-      return <Brain className="text-purple-500" />;
-    case 'meaning':
-      return <Compass className="text-green-500" />;
-    default:
-      return <Target className="text-blue-500" />;
-  }
 };
 
 export function Dashboard() {
@@ -138,95 +123,92 @@ export function Dashboard() {
         </div>
 
         {/* Кнопки для переключения между ежедневными, еженедельными и ежемесячными заданиями */}
-        <div className="flex justify-center space-x-4 mb-6">
-          {(['daily', 'weekly', 'monthly'] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => setTaskType(type)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                taskType === type 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {type === 'daily' && 'Ежедневные'}
-              {type === 'weekly' && 'Еженедельные'}
-              {type === 'monthly' && 'Ежемесячные'}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold flex items-center">
               <Target className="mr-2 text-blue-500" size={24} />
-              {taskType === 'daily' && 'Рекомендации на сегодня'}
-              {taskType === 'weekly' && 'Рекомендации на неделю'}
-              {taskType === 'monthly' && 'Рекомендации на месяц'}
+              Задания
             </h2>
-            <span className="text-sm text-gray-500">
-              Доступно +{totalAvailableXP} XP
-            </span>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setTaskType('daily')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  taskType === 'daily'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Ежедневные
+              </button>
+              <button
+                onClick={() => setTaskType('weekly')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  taskType === 'weekly'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Еженедельные
+              </button>
+              <button
+                onClick={() => setTaskType('monthly')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  taskType === 'monthly'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Ежемесячные
+              </button>
+            </div>
           </div>
 
-          {!error && tasks.length > 0 && (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`p-4 rounded-xl bg-white shadow-sm border border-gray-100 transition-all duration-300 ${
-                    task.completed 
-                      ? 'opacity-75 border-green-200 bg-green-50' 
-                      : 'hover:border-blue-200'
-                  }`}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="p-2 rounded-lg bg-gray-50">
-                      {task.completed ? (
-                        <CheckCircle className="text-green-500" size={24} />
-                      ) : getIconComponent(task.category)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className={`font-medium ${task.completed ? 'text-gray-500' : ''}`}>
-                            {task.title}
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-                        </div>
-                        <span className={`text-sm font-medium ${
-                          task.completed ? 'text-green-500' : 'text-emerald-500'
-                        }`}>
-                          {task.completed ? 'Получено' : '+'}{task.xp} XP
-                        </span>
-                      </div>
-                      {!task.completed && (
-                        <button 
-                          onClick={() => handleTaskCompletion(task.id)}
-                          className="mt-3 w-full py-2 px-4 rounded-lg bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition-colors"
-                        >
-                          Выполнено
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Список задач */}
+          <div className="space-y-3">
+            {error ? (
+              <div className="text-center py-8 rounded-xl bg-red-50">
+                <p className="text-red-500">{error}</p>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="text-center py-12 rounded-xl bg-[var(--tg-theme-secondary-bg-color)]">
+                <Target size={48} className="mx-auto mb-4 text-[var(--tg-theme-hint-color)]" />
+                <p className="text-[var(--tg-theme-hint-color)]">Нет доступных заданий</p>
+              </div>
+            ) : (
+              tasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))
+            )}
+          </div>
+        </div>
 
-          {error && (
-            <div className="text-center py-8 rounded-xl bg-red-50">
-              <p className="text-red-500">{error}</p>
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({ task }: { task: Task }) {
+  return (
+    <div className={`p-4 rounded-xl bg-white shadow-sm border border-gray-100 transition-opacity ${
+      task.completed ? 'opacity-75' : ''
+    }`}>
+      <div className="flex items-start space-x-4">
+        <div className="flex-1">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className={`font-medium ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                {task.title}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">{task.description}</p>
             </div>
-          )}
-          
-          {!error && tasks.length === 0 && (
-            <div className="text-center py-12 rounded-xl bg-[var(--tg-theme-secondary-bg-color)]">
-              <Target size={48} className="mx-auto mb-4 text-[var(--tg-theme-hint-color)]" />
-              <p className="text-[var(--tg-theme-hint-color)]">Нет доступных заданий</p>
-            </div>
-          )}
+          </div>
+
+          <div className="flex items-center space-x-3 mt-3">
+            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+              {task.category}
+            </span>
+            <span className="text-xs text-emerald-500 ml-auto">+{task.xp} XP</span>
+          </div>
         </div>
       </div>
     </div>
