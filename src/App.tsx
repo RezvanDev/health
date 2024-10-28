@@ -3,7 +3,7 @@ import { Home, ListTodo, Users, Trophy, User } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TaskList } from './components/TaskList';
 import { Community } from './components/Community';
-import { Achievements } from './components/Achievements';
+import { Achievements } from './components/achievements/Achievements';
 import { Profile } from './components/Profile';
 
 function App() {
