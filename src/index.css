@@ -14,7 +14,7 @@
   }
 
   body {
-    @apply bg-[var(--tg-theme-bg-color)] text-[var(--tg-theme-text-color)];
+    @apply bg-tg-bg text-tg-text;
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -22,19 +22,62 @@
 @layer components {
   .tg-button {
     @apply w-full py-3 px-4 rounded-xl font-medium transition-all
-    bg-[var(--tg-theme-button-color)] text-[var(--tg-theme-button-text-color)]
-    active:opacity-70;
+           bg-tg-button text-tg-button-text
+           active:opacity-70;
+  }
+
+  .tg-button-secondary {
+    @apply w-full py-3 px-4 rounded-xl font-medium transition-all
+           bg-tg-secondary-bg text-tg-text
+           active:opacity-70;
   }
 
   .tg-card {
-    @apply bg-[var(--tg-theme-secondary-bg-color)] rounded-xl p-4;
+    @apply bg-tg-secondary-bg rounded-xl p-4;
   }
 
   .tg-link {
-    @apply text-[var(--tg-theme-link-color)] hover:opacity-80;
+    @apply text-tg-link hover:opacity-80 transition-opacity;
   }
 
   .tg-hint {
-    @apply text-[var(--tg-theme-hint-color)];
+    @apply text-tg-hint;
+  }
+
+  .tg-nav-button {
+    @apply py-2.5 px-4 rounded-lg font-medium transition-all duration-200
+           flex items-center justify-center gap-2;
+  }
+
+  .tg-nav-button-active {
+    @apply bg-tg-bg text-tg-button shadow-sm;
+  }
+
+  .tg-nav-button-inactive {
+    @apply text-tg-hint hover:text-tg-text;
+  }
+
+  .tg-progress-bar {
+    @apply w-full bg-tg-secondary-bg rounded-full h-2 overflow-hidden;
+  }
+
+  .tg-progress-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  .tg-container {
+    @apply max-w-3xl mx-auto px-4;
+  }
+
+  .tg-title {
+    @apply text-lg font-medium text-tg-text;
+  }
+
+  .tg-subtitle {
+    @apply text-sm text-tg-hint;
+  }
+
+  .tg-card-hover {
+    @apply hover:border-tg-button/20 transition-colors;
   }
 }
