@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, Award, Target, Zap, Calendar, 
-  BarChart2, Settings, ChevronRight, Loader2 
+  User, Award, Target, BarChart2, Settings, ChevronRight, Loader2 
 } from 'lucide-react';
 import { profileApi, UserProfile, UserStats } from '../api/profileApi';
 
@@ -20,12 +19,11 @@ export function Profile() {
       setLoading(true);
       setError(null);
       
-      // Получаем данные профиля и статистику
       const profileData = await profileApi.getProfile();
       const statsData = await profileApi.getUserStats();
 
-      console.log('Profile data:', profileData); // Для отладки
-      console.log('Stats data:', statsData);     // Для отладки
+      console.log('Profile data:', profileData);
+      console.log('Stats data:', statsData);
 
       setProfile(profileData);
       setStats(statsData);
@@ -94,7 +92,7 @@ export function Profile() {
                   +{xpForNextLevel} XP до {profile.level + 1} уровня
                 </span>
               </div>
-              <div className="w-full bg-[var(--tg-theme-secondary-bg-color)] rounded-full h-2">
+              <div className="w-full bg-[var(--tg-theme-secondary-bg-color)] rounded-full h-2 overflow-hidden">
                 <div
                   className="bg-gradient-to-r from-[var(--tg-theme-button-color)] to-purple-500 h-2 rounded-full transition-all"
                   style={{ width: `${xpProgress}%` }}
@@ -135,7 +133,7 @@ export function Profile() {
                   {data.completed}/{data.total}
                 </span>
               </div>
-              <div className="w-full bg-[var(--tg-theme-secondary-bg-color)] rounded-full h-2">
+              <div className="w-full bg-[var(--tg-theme-secondary-bg-color)] rounded-full h-2 overflow-hidden">
                 <div
                   className="bg-gradient-to-r from-[var(--tg-theme-button-color)] to-purple-500 h-2 rounded-full transition-all"
                   style={{ width: `${(data.completed / data.total) * 100}%` }}
