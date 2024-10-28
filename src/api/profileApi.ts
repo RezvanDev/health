@@ -5,17 +5,10 @@ export interface UserProfile {
   telegramId: string;
   username: string;
   firstName: string;
-  lastName?: string;
+  lastName: string | null;
   totalXP: number;
   level: number;
   nextLevelXP: number;
-  stats?: {
-    tasksCompleted: number;
-    achievements: {
-      unlocked: number;
-      total: number;
-    };
-  };
 }
 
 export interface UserStats {
@@ -37,68 +30,24 @@ export interface UserStats {
   };
 }
 
-export interface ProfileResponse {
-  id: number;
-  telegramId: string;
-  username: string;
-  firstName: string;
-  lastName: string | null;
-  totalXP: number;
-  level: number;
-  nextLevelXP: number;
-  stats: {
-    tasksCompleted: number;
-    achievements: {
-      unlocked: number;
-      total: number;
-    };
-  };
-}
-
-export interface StatsResponse {
-  tasksCompleted: {
-    daily: number;
-    weekly: number;
-    monthly: number;
-    total: number;
-  };
-  categories: {
-    [category: string]: {
-      completed: number;
-      total: number;
-    };
-  };
-  achievements: {
-    unlocked: number;
-    total: number;
-  };
-}
-
 export const profileApi = {
-  // Получение профиля пользователя
   async getProfile(): Promise<UserProfile> {
     try {
-      const { data } = await api.get<ProfileResponse>('/profile');
-      return {
-        ...data,
-        lastName: data.lastName || undefined
-      };
+      const { data } = await api.get('/profile');
+      return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      throw new Error('Failed to fetch profile');
+      throw error;
     }
   },
 
-  // Получение статистики пользователя
   async getUserStats(): Promise<UserStats> {
     try {
-      const { data } = await api.get<StatsResponse>('/profile/stats');
+      const { data } = await api.get('/profile/stats');
       return data;
     } catch (error) {
       console.error('Error fetching user stats:', error);
-      throw new Error('Failed to fetch user stats');
+      throw error;
     }
   }
 };
-
-export default profileApi;
